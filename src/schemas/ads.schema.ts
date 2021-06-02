@@ -16,8 +16,8 @@ export class Ads extends Document {
   @Prop({ required: true, ref: 'User' })
   user_id: Types.ObjectId;
 
-  @Prop({ required: true, ref: 'User' })
-  media_id: Types.ObjectId;
+  // @Prop({ required: true, ref: 'User' })
+  // media_id: Types.ObjectId;
 
   @Prop({ required: true, ref: 'Code' })
   code_id: Types.ObjectId;
@@ -31,11 +31,11 @@ export class Ads extends Document {
   @Prop({ required: true })
   directional: Types.Map<TDirectional>;
 
-  @Prop({ required: true })
-  ads_date: TAdsDate; // 投放日期
+  // @Prop({ required: true })
+  // ads_date: TAdsDate; // 投放日期
 
-  @Prop({ required: true })
-  ads_time: TAdsTime; // 投放时间
+  // @Prop({ required: true })
+  // ads_time: TAdsTime; // 投放时间
 
   @Prop({ required: true })
   pay_method: TPayMethod; // 支付方式
@@ -45,6 +45,12 @@ export class Ads extends Document {
 
   @Prop({ required: true })
   creative_config: Types.Map<ICreativeConfig>;
+
+  @Prop({ required: true })
+  ads_amount: number; // 投放量
+
+  @Prop({ required: true })
+  status: string; // 状态
 
   // @Prop()
   // vertical_big_img: any; // 竖版大图

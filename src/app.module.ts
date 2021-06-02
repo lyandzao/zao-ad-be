@@ -1,3 +1,5 @@
+import { SdkModule } from './modules/sdk/sdk.module';
+import { DemoModule } from './modules/demo/demo.module';
 import { SelfModule } from './modules/self/self.module';
 import { UserModule } from './modules/user/user.module';
 import { CodeModule } from './modules/code/code.module';
@@ -21,6 +23,8 @@ import { ReportModule } from './modules/report/report.module';
 
 @Module({
   imports: [
+    SdkModule,
+    DemoModule,
     SelfModule,
     ReportModule,
     CodeModule,
@@ -37,7 +41,8 @@ import { ReportModule } from './modules/report/report.module';
     }),
     StatusMonitorModule.setUp(statusMonitorConfig),
     MongooseModule.forRoot(
-      'mongodb://zao:123456@localhost:27017/ad?authSource=admin',
+      // 'mongodb://zao:123456@localhost:27017/ad?authSource=admin',
+      'mongodb://zao:123456@82.156.16.151:27017/ad?authSource=admin',
       {
         connectionFactory: (connection) => {
           console.log('db connect success');
@@ -48,6 +53,6 @@ import { ReportModule } from './modules/report/report.module';
     EmailModule,
   ],
   controllers: [AppController, UserController],
-  providers: [AppService, AppService],
+  providers: [AppService],
 })
 export class AppModule {}

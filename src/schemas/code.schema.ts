@@ -22,6 +22,12 @@ export class Code extends Document {
 
   @Prop({ default: [] })
   shield: number[];
+
+  @Prop()
+  price: number;
+
+  @Prop({ default: [] })
+  date: number[];
 }
 
 export const CodeSchema = SchemaFactory.createForClass(Code);

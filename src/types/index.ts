@@ -15,8 +15,8 @@ export type TCodeStatus = 'running' | 'stop';
 // 投放定向
 export type TDirectional = {
   gender: 'all' | 'man' | 'woman';
-  location: 'all' | string;
-  age: 'all' | number;
+  location: string[];
+  age: number[];
 };
 
 // 投放日期：长期、自定义
@@ -26,7 +26,7 @@ export type TAdsDate = 'long_term' | string;
 export type TAdsTime = 'all_day' | string;
 
 // 千次曝光、前次点击、优化千次曝光、优化千次点击
-export type TPayMethod = 'CPM' | 'CPC' | 'oCPM' | 'oCPC';
+export type TPayMethod = 'CPM' | 'CPC' | 'CPT' | 'oCPM' | 'oCPC';
 
 export interface ICreativeConfig {
   // 创意内容

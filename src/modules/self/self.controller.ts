@@ -29,6 +29,11 @@ export class SelfController {
     return this.selfService.getBuriedList(app_id);
   }
 
+  @Get('/filter_list')
+  async getBuriedFilterList(@Request() req) {
+    return this.selfService.getBuriedFilterList(req.user.user_id);
+  }
+
   @Get('/name')
   async getBuriedName(@Query() { app_id }) {
     return this.selfService.getSelfBuriedName(app_id);
@@ -45,8 +50,8 @@ export class SelfController {
   }
 
   @Get('/report')
-  async getReport(@Query() { app_id, event, start, end }) {
-    return this.selfService.getReport(app_id, event, start, end);
+  async getReport(@Query() { event_id, start, end }) {
+    return this.selfService.getReport(event_id, start, end);
   }
 
   @Get('/top')

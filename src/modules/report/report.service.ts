@@ -447,27 +447,7 @@ export class ReportService {
     current = Number(current);
     page_size = Number(page_size);
     console.log(user_id);
-    const total = await this.adsModel.aggregate([
-      {
-        $match: {
-          user_id: Types.ObjectId(user_id),
-        },
-      },
-      {
-        $lookup: {
-          from: 'adsBuried',
-          localField: '_id',
-          foreignField: 'ads_id',
-          as: 'buried',
-        },
-      },
-      {
-        $unwind: '$buried',
-      },
-      {
-        $unwind: '$buried.data',
-      },
-    ]);
+    const total=await this.adsModel.countDocuments();
 
     const res = await this.adsModel.aggregate([
       {
@@ -484,39 +464,6 @@ export class ReportService {
         },
       },
       {
-        $lookup: {
-          from: 'users',
-          localField: 'media_id',
-          foreignField: '_id',
-          as: 'media',
-        },
-      },
-      {
-        $unwind: '$media',
-      },
-      {
-        $lookup: {
-          from: 'codes',
-          localField: 'code_id',
-          foreignField: '_id',
-          as: 'code',
-        },
-      },
-      {
-        $unwind: '$code',
-      },
-      {
-        $lookup: {
-          from: 'apps',
-          localField: 'code.app_id',
-          foreignField: '_id',
-          as: 'app',
-        },
-      },
-      {
-        $unwind: '$app',
-      },
-      {
         $unwind: '$buried',
       },
       {
@@ -525,21 +472,10 @@ export class ReportService {
       {
         $project: {
           ads_name: 1,
-          ads_directional: '$directional',
-          ads_date: 1,
-          ads_time: 1,
+          ads_amount:1,
           pay_method: 1,
           payments: 1,
-          ads_creative_config: '$creative_config',
-          code_id: 1,
           code_type: 1,
-          code_name: '$code.code_name',
-          media_id: 1,
-          media_name: '$media.name',
-          app_id: '$app._id',
-          app_name: '$app.app_name',
-          app_industry: '$app.industry',
-          buried_id: '$buried._id',
           buried_event: '$buried.event',
           buried_date: '$buried.data.date',
           buried_date_string: '$buried.data.date_string',
@@ -560,7 +496,7 @@ export class ReportService {
       pagination: {
         current,
         page_size,
-        total: total.length,
+        total: total,
       },
       data: res,
     };

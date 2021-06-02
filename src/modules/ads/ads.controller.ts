@@ -46,4 +46,19 @@ export class AdsController {
   async getAdsInfo(@Query() { ads_id }) {
     return this.adsService.getAdsInfo(ads_id);
   }
+
+  @Get('/summary')
+  async getAdsSummary(@Request() { user }) {
+    return this.adsService.getAdsSummary(user.user_id);
+  }
+
+  @Get('/review/list')
+  async getReviewAppList() {
+    return this.adsService.getReviewAdsList();
+  }
+
+  @Get('/review')
+  async review(@Query() { ads_id, status }) {
+    return this.adsService.review(ads_id, status);
+  }
 }

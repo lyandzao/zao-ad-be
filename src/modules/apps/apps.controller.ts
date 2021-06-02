@@ -51,4 +51,19 @@ export class AppsController {
   async getAppInfoList(@Request() req) {
     return this.appsService.getAppInfoList(req.user.user_id);
   }
+
+  @Get('/summary')
+  async getAppSummary(@Request() { user }) {
+    return this.appsService.getAppSummary(user.user_id);
+  }
+
+  @Get('/review/list')
+  async getReviewAppList() {
+    return this.appsService.getReviewAppList();
+  }
+
+  @Get('/review')
+  async review(@Query() { app_id, status }) {
+    return this.appsService.review(app_id, status);
+  }
 }

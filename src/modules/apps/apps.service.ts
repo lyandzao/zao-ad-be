@@ -3,10 +3,15 @@ import { throwException } from '@/utils';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { BuriedDocument } from '@/schemas/buried.schema';
+import * as moment from 'moment';
 
 @Injectable()
 export class AppsService {
-  constructor(@InjectModel('App') private appModel: Model<AppDocument>) {}
+  constructor(
+    @InjectModel('App') private appModel: Model<AppDocument>,
+    @InjectModel('Buried') private buriedModel: Model<BuriedDocument>,
+  ) {}
 
   async createApp(
     app_name: string,
@@ -49,6 +54,42 @@ export class AppsService {
     return this.appModel.find({ user_id: Types.ObjectId(user_id) });
   }
 
+  async getReviewAppList() {
+    return this.appModel.aggregate([
+      {
+        $match: { app_status: 'under_review' },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $project: {
+          app_id: '$_id',
+          app_name: 1,
+          industry: 1,
+          user_id: 1,
+          app_status: 1,
+          user_name: '$user.name',
+        },
+      },
+    ]);
+  }
+
+  async review(app_id: string, status: string) {
+    return this.appModel.updateOne(
+      { _id: Types.ObjectId(app_id) },
+      { app_status: status },
+    );
+  }
+
   async getAppInfo(app_id: string) {
     console.log(app_id);
     return this.appModel.findOne({ _id: Types.ObjectId(app_id) });
@@ -68,5 +109,25 @@ export class AppsService {
         },
       },
     ]);
+  }
+
+  async getAppSummary(user_id: string) {
+    const running_count = await this.appModel.countDocuments({
+      user_id: Types.ObjectId(user_id),
+      app_status: 'running',
+    });
+    const under_review_count = await this.appModel.countDocuments({
+      user_id: Types.ObjectId(user_id),
+      app_status: 'under_review',
+    });
+    const no_pass_count = await this.appModel.countDocuments({
+      user_id: Types.ObjectId(user_id),
+      app_status: 'no_pass',
+    });
+    return {
+      running: running_count,
+      under_review: under_review_count,
+      no_pass: no_pass_count,
+    };
   }
 }

@@ -4,10 +4,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as moment from 'moment';
 import { throwException } from '@/utils';
+import { User, UserDocument } from '@/schemas/user.schema';
+import { AppDocument } from '@/schemas/app.schema';
 
 @Injectable()
 export class SelfService {
-  constructor(@InjectModel('Self') private selfModel: Model<SelfDocument>) {}
+  constructor(
+    @InjectModel('Self') private selfModel: Model<SelfDocument>,
+    @InjectModel('User') private userModel: Model<UserDocument>,
+    @InjectModel('App') private appModel: Model<AppDocument>,
+  ) {}
 
   async createBuriedPoint(app_id: string, event: string, desc: string) {
     const today = moment(Date.now()).format('YYYY-MM-DD');
@@ -49,7 +55,30 @@ export class SelfService {
   }
 
   async getBuriedInfo(buried_id: string) {
-    return this.selfModel.findOne({ _id: Types.ObjectId(buried_id) });
+    return this.selfModel
+      .aggregate([
+        {
+          $match: { _id: Types.ObjectId(buried_id) },
+        },
+        {
+          $lookup: {
+            from: 'apps',
+            localField: 'app_id',
+            foreignField: '_id',
+            as: 'app',
+          },
+        },
+        {
+          $project: {
+            event: 1,
+            app_id: 1,
+            data: 1,
+            desc: 1,
+            app: { $arrayElemAt: ['$app', 0] },
+          },
+        },
+      ])
+      .then((items) => items[0]);
   }
 
   async getSelfBuriedName(app_id: string) {
@@ -128,12 +157,13 @@ export class SelfService {
     }
   }
 
-  async getReport(app_id: string, event: string, start: string, end: string) {
+  async getReport(event_id: string, start: string, end: string) {
     const startStamp = moment(start).valueOf();
     const endStamp = moment(end).valueOf();
+    console.log(event_id);
     const res = await this.selfModel.aggregate([
       {
-        $match: { app_id: Types.ObjectId(app_id), event },
+        $match: { _id: Types.ObjectId(event_id) },
       },
       {
         $unwind: '$data',
@@ -157,6 +187,22 @@ export class SelfService {
     return res;
   }
 
+  async getBuriedFilterList(user_id: string) {
+    return this.appModel.aggregate([
+      {
+        $match: { user_id: Types.ObjectId(user_id) },
+      },
+      {
+        $lookup: {
+          from: 'self',
+          localField: '_id',
+          foreignField: 'app_id',
+          as: 'events',
+        },
+      },
+    ]);
+  }
+
   async getTopBuried(app_id: string, type: 'show' | 'click') {
     switch (type) {
       case 'show':
@@ -172,6 +218,7 @@ export class SelfService {
           {
             $group: {
               _id: '$event',
+              event_name: { $first: '$event' },
               value: { $sum: '$data.show' },
             },
           },
@@ -192,6 +239,7 @@ export class SelfService {
           {
             $group: {
               _id: '$event',
+              event_name: { $first: '$event' },
               value: { $sum: '$data.click' },
             },
           },

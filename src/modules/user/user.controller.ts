@@ -73,4 +73,75 @@ export class UserController {
   async getMediaList() {
     return this.userService.getMediaList();
   }
+
+  @Get('/splash/list')
+  async getSplashList() {
+    return this.userService.getSplashList();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/advertiser_finance/info')
+  async getAdvertiserInfo(@Request() { user }) {
+    return this.userService.getAdvertiserFinanceInfo(user.user_id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/media_finance/info')
+  async getMediaInfo(@Request() { user }) {
+    return this.userService.getMediaFinanceInfo(user.user_id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/admin_finance/info')
+  async getAdminInfo(@Request() { user }) {
+    return this.userService.getAdminFinanceInfo(user.user_id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/recharge')
+  async recharge(@Request() { user }, @Query() { amount }) {
+    return this.userService.recharge(user.user_id, amount);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/recharge/list')
+  async getRechargeList(@Request() { user }) {
+    return this.userService.getRechargeList(user.user_id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/withdraw')
+  async withdraw(@Request() { user }, @Query() { amount }) {
+    return this.userService.withdraw(user.user_id, amount);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/withdraw/list')
+  async getWithdrawList(@Request() { user }) {
+    return this.userService.getWithdrawList(user.user_id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/review/recharge/list')
+  async getReviewRechargeList() {
+    return this.userService.getReviewRechargeList();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/review/recharge')
+  async reviewRecharge(@Query() { user_id, order_id, status }) {
+    return this.userService.reviewRecharge(user_id, order_id, status);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/review/withdraw/list')
+  async getReviewWithdrawList() {
+    return this.userService.getReviewWithdrawList();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/review/withdraw')
+  async reviewWithdraw(@Query() { user_id, order_id, status }) {
+    return this.userService.reviewWithdraw(user_id, order_id, status);
+  }
 }
