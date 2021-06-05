@@ -112,6 +112,7 @@ export const getDirectionFlow = (demands: IDemand[], supplies: ISupply[]) => {
 
 const getOrder = (demands: IDemand[], supplies: ISupply[]) => {
   const directionFlows = getDirectionFlow(demands, supplies);
+  // console.log(directionFlows);
   const res: IOrder[] = [];
   for (const i in directionFlows) {
     res.push({
@@ -122,7 +123,13 @@ const getOrder = (demands: IDemand[], supplies: ISupply[]) => {
       payments: directionFlows[i].payments,
     });
   }
-  return res.sort((a, b) => a.S - b.S);
+  return res.sort((a, b) => {
+    if (a.S === b.S) {
+      return b.payments - a.payments;
+    } else {
+      return a.S - b.S;
+    }
+  });
 };
 
 const getRemainsSum = (ids: string[], remains: ISupply[]) => {
@@ -143,6 +150,7 @@ interface IOrderRes {
 }
 export const hwmPlan = (demands: IDemand[], supplies: ISupply[]) => {
   const orders = getOrder(demands, supplies);
+  console.log(orders);
   const rates = new Map();
 
   const remains = supplies;
@@ -198,6 +206,12 @@ export const hwmServe = (
   orders: IOrderRes[],
   rates: IRate[],
 ) => {
+  // console.log('------rates------');
+  // console.log(rates);
+  // console.log('+++++++++++++++++');
+  // console.log('------orders------');
+  // console.log(orders);
+  // console.log('+++++++++++++++++');
   const orderNum = orders.length;
   const _candidates: any = candidates
     .map((i) => {
@@ -212,6 +226,7 @@ export const hwmServe = (
     .sort((a, b) => b.order * b.payments - a.order * a.payments);
   console.log(_candidates);
   // const randValue = Math.random();
+  console.log(_candidates);
   const accuRate = _candidates
     .map((i: any) => i.rate)
     .reduce((a: any, b: any) => a + b, 0);
@@ -223,11 +238,11 @@ export const hwmServe = (
         _accuRate = _accuRate + _candidates[i].rate;
         if (_accuRate === 1) {
           l = i;
-          return;
+          break;
         }
         if (_accuRate > 1) {
           l = i - 1;
-          return;
+          break;
         }
       }
       return _candidates[l].ads_id;

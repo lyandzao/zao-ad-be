@@ -25,7 +25,7 @@ export class CodeController {
       codeBody.code_type,
       codeBody.shield,
       codeBody.price,
-      codeBody.date
+      codeBody.date,
     );
   }
 
@@ -71,5 +71,14 @@ export class CodeController {
   @Get('/review')
   async review(@Query() { code_id, status }) {
     return this.codeService.review(code_id, status);
+  }
+
+  @Get('/status')
+  async changeCodeStatus(@Query() { code_id,status }) {
+    return this.codeService.changeCodeStatus(code_id, status);
+  }
+  @Get('/delete')
+  async deleteCode(@Query() { code_id }) {
+    return this.codeService.deleteCode(code_id);
   }
 }

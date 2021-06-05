@@ -52,6 +52,13 @@ export class CodeService {
     }
   }
 
+  async changeCodeStatus(code_id: string, status: string) {
+    return this.codeModel.updateOne(
+      { _id: Types.ObjectId(code_id) },
+      { code_status: status },
+    );
+  }
+
   async updateCode(code_id: string, code_name: string, shield: string) {
     return this.codeModel.updateOne(
       { _id: Types.ObjectId(code_id) },
@@ -76,6 +83,12 @@ export class CodeService {
         $unwind: '$app',
       },
     ]);
+  }
+
+  async deleteCode(code_id: string) {
+    await this.codeModel.deleteOne({ _id: Types.ObjectId(code_id) });
+    await this.buriedModel.deleteMany({ code_id: Types.ObjectId(code_id) });
+    return 'ok';
   }
 
   async getReviewCodeList() {

@@ -58,4 +58,9 @@ export class SelfController {
   async getTopBuried(@Query() { app_id, type }) {
     return this.selfService.getTopBuried(app_id, type);
   }
+
+  @Get('/delete')
+  async deleteEvent(@Query() { event_id }) {
+    return this.selfService.deleteEvent(event_id);
+  }
 }

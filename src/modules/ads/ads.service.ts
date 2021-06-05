@@ -38,6 +38,18 @@ export interface IAds {
   // horizontal_big_img: any; // 横版大图
 }
 
+const getOneTimePayments = (ads_config: IAds) => {
+  if (!ads_config.payments) {
+    return 0;
+  }
+  if (ads_config.pay_method === 'CPM') {
+    return ads_config.payments / 1000;
+  }
+  if (ads_config.pay_method === 'CPC') {
+    return ads_config.payments;
+  }
+};
+
 @Injectable()
 export class AdsService {
   constructor(
@@ -64,7 +76,7 @@ export class AdsService {
       user_id: Types.ObjectId(user_id),
       ads_id: newAds._id,
       ad_remaining_amount: adsConfig.ads_amount ? adsConfig.ads_amount : 0,
-      one_time_payment: adsConfig.payments ? adsConfig.payments / 1000 : 0,
+      one_time_payment: getOneTimePayments(adsConfig),
     });
     await this.adsBuriedModel.insertMany([
       {
@@ -93,6 +105,17 @@ export class AdsService {
     newAdsPayments.save();
     newAds.save();
     return newAds;
+  }
+
+  async deleteAds(ads_id: string) {
+    await this.adsBuriedModel.deleteMany({ ads_id: Types.ObjectId(ads_id) });
+    await this.adsPaymentsModel.deleteOne({ ads_id: Types.ObjectId(ads_id) });
+    await this.adsModel.deleteOne({ _id: Types.ObjectId(ads_id) });
+    return 'ok';
+  }
+
+  async changeAdsStatus(ads_id: string, status: string) {
+    await this.adsModel.updateOne({ _id: Types.ObjectId(ads_id) }, { status });
   }
 
   async updateAds(ads_id: string, adsConfig: IAds) {

@@ -42,7 +42,40 @@ export class SdkService {
     @InjectModel('Code') private codeModel: Model<CodeDocument>,
   ) {}
 
-  async getAd(type: string, directionalConfig: string) {
+  async getSplashAd(code_id: string) {
+    const isCodeRunning = await this.codeModel.findOne({
+      _id: Types.ObjectId(code_id),
+      code_status: 'running',
+    });
+    if (!isCodeRunning) {
+      return [];
+    }
+    return this.adsModel.aggregate([
+      {
+        $match: { code_id: Types.ObjectId(code_id), status: 'running' },
+      },
+      {
+        $project: {
+          ads_name: 1,
+          code_type: 1,
+          creative_config: 1,
+          advertiser_id: '$user_id',
+        },
+      },
+      {
+        $limit: 1,
+      },
+    ]);
+  }
+
+  async getAd(type: string, directionalConfig: string, code_id: string) {
+    const isCodeRunning = await this.codeModel.findOne({
+      _id: Types.ObjectId(code_id),
+      code_status: 'running',
+    });
+    if (!isCodeRunning) {
+      return [];
+    }
     console.log(directionalConfig);
     // 格式化定向
     let _directionalConfig: any = {
@@ -57,6 +90,9 @@ export class SdkService {
     const supplies: any = await this.flowDataModel.find();
     const demands = await this.adsModel.aggregate([
       {
+        $match: { code_type: type, status: 'running' },
+      },
+      {
         $project: {
           ads_id: '$_id',
           age: '$directional.age',
@@ -70,7 +106,7 @@ export class SdkService {
     // 获得满足条件的广告
     const candidatesDemands = await this.adsModel.aggregate([
       {
-        $match: { code_type: type },
+        $match: { code_type: type, status: 'running' },
       },
       {
         $project: {
@@ -83,16 +119,18 @@ export class SdkService {
         },
       },
     ]);
+    console.log('-------满足需求的广告-------');
+    console.log(candidatesDemands);
+    console.log('++++++++++++++');
     const { orders, rates } = hwmPlan(demands, supplies);
     const candidates = getCandidates(_directionalConfig, candidatesDemands);
-    // console.log(candidates);
     // 根据HWM算法获得满足条件的广告位id
     const adsId = hwmServe(candidates, orders, rates);
     console.log(adsId);
     if (adsId) {
       return this.adsModel.aggregate([
         {
-          $match: { _id: Types.ObjectId(adsId) },
+          $match: { _id: Types.ObjectId(adsId), status: 'running' },
         },
         {
           $project: {
@@ -124,7 +162,7 @@ export class SdkService {
       event,
       data: { $elemMatch: { date: todayStamp } },
     });
-     // 保存埋点数据
+    // 保存埋点数据
     if (hadTodayAdsBuried) {
       this.adsBuriedModel
         .updateOne(
@@ -185,6 +223,13 @@ export class SdkService {
       { ads_id: Types.ObjectId(ads_id) },
       { $inc: { ad_remaining_amount: -1 } },
     );
+    const { ad_remaining_amount } = await this.adsPaymentsModel.findOne({
+      ads_id: Types.ObjectId(ads_id),
+    });
+    await this.adsModel.updateOne(
+      { _id: Types.ObjectId(ads_id) },
+      { ads_amount: ad_remaining_amount },
+    );
     const paymentsInfo = await this.adsPaymentsModel.findOne({
       ads_id: Types.ObjectId(ads_id),
     });
@@ -194,7 +239,7 @@ export class SdkService {
     const codeInfo = await this.codeModel.findOne({
       _id: Types.ObjectId(code_id),
     });
-    console.log(paymentsInfo);
+
     if (
       (event === 'show' && adsInfo.pay_method === 'CPM') ||
       (event === 'click' && adsInfo.pay_method === 'CPC')
@@ -215,6 +260,65 @@ export class SdkService {
         { user_id: Types.ObjectId('60b6030d52178b7ba850b451') },
         { $inc: { earnings: admin_one_time_payment } },
       );
+      if (adsInfo.code_type !== 'splash') {
+        const advertiserFinanceInfo = await this.advertiserFinanceModel.findOne(
+          {
+            user_id: adsInfo.user_id,
+          },
+        );
+        const mediaFinanceInfo = await this.mediaFinanceModel.findOne({
+          user_id: codeInfo.user_id,
+        });
+        const adminFinanceInfo = await this.adminFinanceModel.findOne({
+          user_id: Types.ObjectId('60b6030d52178b7ba850b451'),
+        });
+        if (advertiserFinanceInfo.today_date_string === today) {
+          await this.advertiserFinanceModel.updateOne(
+            {
+              user_id: adsInfo.user_id,
+            },
+            { $inc: { today_cost: paymentsInfo.one_time_payment } },
+          );
+        } else {
+          await this.adminFinanceModel.updateOne(
+            {
+              user_id: adsInfo.user_id,
+            },
+            {
+              today_cost: paymentsInfo.one_time_payment,
+              today_date_string: today,
+            },
+          );
+        }
+        if (mediaFinanceInfo.today_date_string === today) {
+          await this.mediaFinanceModel.updateOne(
+            { user_id: codeInfo.user_id },
+            { $inc: { today_earnings: media_one_time_payment } },
+          );
+        } else {
+          await this.mediaFinanceModel.updateOne(
+            { user_id: codeInfo.user_id },
+            {
+              today_earnings: media_one_time_payment,
+              today_date_string: today,
+            },
+          );
+        }
+        if (adminFinanceInfo.today_date_string === today) {
+          await this.adminFinanceModel.updateOne(
+            { user_id: Types.ObjectId('60b6030d52178b7ba850b451') },
+            { $inc: { today_earnings: media_one_time_payment } },
+          );
+        } else {
+          await this.mediaFinanceModel.updateOne(
+            { user_id: Types.ObjectId('60b6030d52178b7ba850b451') },
+            {
+              today_earnings: media_one_time_payment,
+              today_date_string: today,
+            },
+          );
+        }
+      }
     }
 
     return 'ok';

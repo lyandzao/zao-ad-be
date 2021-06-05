@@ -61,4 +61,13 @@ export class AdsController {
   async review(@Query() { ads_id, status }) {
     return this.adsService.review(ads_id, status);
   }
+  @Get('/status')
+  async changeAdsStatus(@Query() { ads_id, status }) {
+    return this.adsService.changeAdsStatus(ads_id, status);
+  }
+
+  @Get('/delete')
+  async deleteAds(@Query() { ads_id }) {
+    return this.adsService.deleteAds(ads_id);
+  }
 }

@@ -6,8 +6,13 @@ export class SdkController {
   constructor(private readonly SdkService: SdkService) {}
 
   @Get('/sdk/ad')
-  async getAd(@Query() { type, directionalConfig }) {
-    return this.SdkService.getAd(type, directionalConfig);
+  async getAd(@Query() { type, directionalConfig, code_id }) {
+    return this.SdkService.getAd(type, directionalConfig, code_id);
+  }
+
+  @Get('/sdk/ad/splash')
+  async getSplashAd(@Query() { code_id }) {
+    return this.SdkService.getSplashAd(code_id);
   }
 
   @Get('/sdk/ad/event')

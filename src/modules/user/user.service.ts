@@ -57,20 +57,51 @@ export class UserService {
   }
 
   async getAdvertiserFinanceInfo(user_id: string) {
+    const today = moment(Date.now()).format('YYYY-MM-DD');
+    const advertiserFinanceInfo = await this.advertiserFinanceModel.findOne({
+      user_id: Types.ObjectId(user_id),
+    });
+    console.log(advertiserFinanceInfo);
+    if (advertiserFinanceInfo?.today_date_string !== today) {
+      await this.advertiserFinanceModel.updateOne(
+        { user_id: Types.ObjectId(user_id) },
+        { today_cost: 0, today_date_string: today },
+      );
+    }
     return this.advertiserFinanceModel.findOne({
       user_id: Types.ObjectId(user_id),
     });
   }
 
   async getMediaFinanceInfo(user_id: string) {
-    console.log(user_id);
+    const today = moment(Date.now()).format('YYYY-MM-DD');
+    const mediaFinanceInfo = await this.mediaFinanceModel.findOne({
+      user_id: Types.ObjectId(user_id),
+    });
+    console.log(mediaFinanceInfo);
+    if (mediaFinanceInfo?.today_date_string !== today) {
+      await this.mediaFinanceModel.updateOne(
+        { user_id: Types.ObjectId(user_id) },
+        { today_earnings: 0, today_date_string: today },
+      );
+    }
     return this.mediaFinanceModel.findOne({
       user_id: Types.ObjectId(user_id),
     });
   }
 
   async getAdminFinanceInfo(user_id: string) {
-    console.log(user_id);
+    const today = moment(Date.now()).format('YYYY-MM-DD');
+    const adminFinanceInfo = await this.adminFinanceModel.findOne({
+      user_id: Types.ObjectId(user_id),
+    });
+
+    if (adminFinanceInfo?.today_date_string !== today) {
+      await this.adminFinanceModel.updateOne(
+        { user_id: Types.ObjectId(user_id) },
+        { today_earnings: 0, today_date_string: today },
+      );
+    }
     return this.adminFinanceModel.findOne({
       user_id: Types.ObjectId(user_id),
     });

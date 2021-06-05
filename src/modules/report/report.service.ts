@@ -406,7 +406,7 @@ export class ReportService {
     start: string,
     end: string,
   ) {
-    console.log(ads_id,type,start,end);
+    console.log(ads_id, type, start, end);
     switch (type) {
       case 'show':
         return await this.getBuriedByAdsByDate(ads_id, 'show', start, end);
@@ -447,7 +447,27 @@ export class ReportService {
     current = Number(current);
     page_size = Number(page_size);
     console.log(user_id);
-    const total=await this.adsModel.countDocuments();
+    const total = await this.adsModel.aggregate([
+      {
+        $match: {
+          user_id: Types.ObjectId(user_id),
+        },
+      },
+      {
+        $lookup: {
+          from: 'adsBuried',
+          localField: '_id',
+          foreignField: 'ads_id',
+          as: 'buried',
+        },
+      },
+      {
+        $unwind: '$buried',
+      },
+      {
+        $unwind: '$buried.data',
+      },
+    ]);
 
     const res = await this.adsModel.aggregate([
       {
@@ -472,7 +492,7 @@ export class ReportService {
       {
         $project: {
           ads_name: 1,
-          ads_amount:1,
+          ads_amount: 1,
           pay_method: 1,
           payments: 1,
           code_type: 1,
@@ -483,7 +503,7 @@ export class ReportService {
         },
       },
       {
-        $sort: { date: -1 },
+        $sort: { buried_date: -1 },
       },
       {
         $skip: (current - 1) * page_size,
@@ -496,7 +516,7 @@ export class ReportService {
       pagination: {
         current,
         page_size,
-        total: total,
+        total: total.length,
       },
       data: res,
     };

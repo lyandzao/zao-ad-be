@@ -106,6 +106,11 @@ export class SelfService {
     return res;
   }
 
+  async deleteEvent(event_id: string) {
+    await this.selfModel.deleteOne({ _id: Types.ObjectId(event_id) });
+    return 'ok';
+  }
+
   async triggerBuried(app_id: string, event: string, type: 'show' | 'click') {
     const today = moment(Date.now()).format('YYYY-MM-DD');
     const todayStamp = moment(today).valueOf();
@@ -160,7 +165,6 @@ export class SelfService {
   async getReport(event_id: string, start: string, end: string) {
     const startStamp = moment(start).valueOf();
     const endStamp = moment(end).valueOf();
-    console.log(event_id);
     const res = await this.selfModel.aggregate([
       {
         $match: { _id: Types.ObjectId(event_id) },

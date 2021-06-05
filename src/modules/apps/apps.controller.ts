@@ -37,9 +37,9 @@ export class AppsController {
   }
 
   @Get('/list')
-  async getAppList(@Request() req) {
+  async getAppList(@Request() req, @Query() { running }) {
     console.log(req.user);
-    return this.appsService.getAppList(req.user.user_id);
+    return this.appsService.getAppList(req.user.user_id, running);
   }
 
   @Get('/info')
@@ -65,5 +65,15 @@ export class AppsController {
   @Get('/review')
   async review(@Query() { app_id, status }) {
     return this.appsService.review(app_id, status);
+  }
+
+  @Get('/status')
+  async changeAppStatus(@Query() { app_id, status }) {
+    return this.appsService.changeAppStatus(app_id, status);
+  }
+
+  @Get('/delete')
+  async deleteApps(@Query() { app_id }) {
+    return this.appsService.deleteApp(app_id);
   }
 }

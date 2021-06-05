@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { BuriedDocument } from '@/schemas/buried.schema';
+import { CodeDocument } from '@/schemas/code.schema';
 import * as moment from 'moment';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AppsService {
   constructor(
     @InjectModel('App') private appModel: Model<AppDocument>,
     @InjectModel('Buried') private buriedModel: Model<BuriedDocument>,
+    @InjectModel('Code') private codeModel: Model<CodeDocument>,
   ) {}
 
   async createApp(
@@ -35,6 +37,19 @@ export class AppsService {
     }
   }
 
+  async changeAppStatus(app_id: string, status: string) {
+    if (status === 'stop' || status === 'under_review') {
+      await this.codeModel.updateMany(
+        { app_id: Types.ObjectId(app_id) },
+        { code_status: status },
+      );
+      return this.appModel.updateOne(
+        { _id: Types.ObjectId(app_id) },
+        { app_status: status },
+      );
+    }
+  }
+
   async updateApp(
     app_id: string,
     app_name: string,
@@ -49,9 +64,24 @@ export class AppsService {
     );
   }
 
-  async getAppList(user_id: string) {
+  async getAppList(user_id: string, running: boolean) {
     console.log(user_id);
-    return this.appModel.find({ user_id: Types.ObjectId(user_id) });
+    if (running) {
+      return this.appModel.find({
+        user_id: Types.ObjectId(user_id),
+        app_status: 'running',
+      });
+    } else {
+      return this.appModel.find({
+        user_id: Types.ObjectId(user_id),
+      });
+    }
+  }
+
+  async deleteApp(app_id: string) {
+    await this.codeModel.deleteMany({ app_id: Types.ObjectId(app_id) });
+    await this.appModel.deleteOne({ _id: Types.ObjectId(app_id) });
+    return 'ok';
   }
 
   async getReviewAppList() {
